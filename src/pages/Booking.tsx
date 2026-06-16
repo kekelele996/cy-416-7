@@ -1,9 +1,10 @@
 import dayjs, { Dayjs } from 'dayjs';
-import { Alert, Button, Form, Input, Select, Space, Typography } from 'antd';
+import { Alert, Button, Checkbox, Form, Input, Select, Space, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { EquipmentTag } from '@/components/common/EquipmentTag';
 import { TimeSlotPicker } from '@/components/common/TimeSlotPicker';
+import { REMINDER_OPTIONS, type ReminderMinutes } from '@/constants/booking';
 import { FORM_MESSAGES } from '@/constants/messages';
 import { RoomStatus } from '@/constants/room';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,6 +34,8 @@ export function Booking() {
   const [date, setDate] = useState<Dayjs>(dayjs());
   const [startTime, setStartTime] = useState<string>('09:00');
   const [endTime, setEndTime] = useState<string>('10:00');
+  const [reminderEnabled, setReminderEnabled] = useState<boolean>(false);
+  const [reminderMinutes, setReminderMinutes] = useState<ReminderMinutes>(5);
   const selectedRoomId = Form.useWatch('room_id', form);
   const selectedRoom = useMemo(() => rooms.find((room) => room.id === selectedRoomId), [rooms, selectedRoomId]);
 
@@ -78,6 +81,8 @@ export function Booking() {
       attendees,
       start_time: start,
       end_time: end,
+      reminder_minutes: reminderEnabled ? reminderMinutes : 0,
+      reminder_triggered: false,
     });
 
     if (ok) {
@@ -153,6 +158,31 @@ export function Booking() {
             <Form.Item name="attendees" label="参会人" rules={[{ required: true, message: FORM_MESSAGES.required }]}>
               <Input.TextArea rows={4} placeholder="用逗号或换行分隔" />
             </Form.Item>
+
+            <div className="mb-4 rounded-md border border-[var(--rf-border)] p-3">
+              <div className="mb-2">
+                <Checkbox checked={reminderEnabled} onChange={(e) => setReminderEnabled(e.target.checked)}>
+                  开启会前提醒
+                </Checkbox>
+              </div>
+              {reminderEnabled && (
+                <div className="ml-6">
+                  <Space direction="vertical" size="small">
+                    <Typography.Text type="secondary" className="text-xs">
+                      选择提醒时间
+                    </Typography.Text>
+                    <Select
+                      size="small"
+                      value={reminderMinutes}
+                      style={{ width: 140 }}
+                      onChange={(value) => setReminderMinutes(value as ReminderMinutes)}
+                      options={REMINDER_OPTIONS}
+                    />
+                  </Space>
+                </div>
+              )}
+            </div>
+
             <Button type="primary" htmlType="submit" loading={loading} disabled={conflict.hasConflict}>
               提交预约
             </Button>

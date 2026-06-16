@@ -1,8 +1,9 @@
-import { Button, Form, Input, Modal, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { Button, Checkbox, Form, Input, Modal, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { BellOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import { BookingTimeline } from '@/components/common/BookingTimeline';
 import { EmptyState } from '@/components/common/EmptyState';
-import { BOOKING_MUTABLE_STATUSES } from '@/constants/booking';
+import { BOOKING_MUTABLE_STATUSES, REMINDER_OPTIONS, type ReminderMinutes } from '@/constants/booking';
 import type { Booking } from '@/models/booking';
 import { useAuth } from '@/hooks/useAuth';
 import { useBookingStore } from '@/stores/bookingStore';
@@ -18,7 +19,7 @@ export function MyBookings() {
   const edit = useBookingStore((state) => state.edit);
   const { currentUser } = useAuth();
   const [editing, setEditing] = useState<Booking | undefined>();
-  const [form] = Form.useForm<{ title: string; attendees: string }>();
+  const [form] = Form.useForm<{ title: string; attendees: string; reminder_enabled: boolean; reminder_minutes: ReminderMinutes }>();
   const roomMap = useMemo(() => new Map(rooms.map((room) => [room.id, room])), [rooms]);
 
   const owned = bookings.filter((booking) => booking.user_id === currentUser?.id);
@@ -30,9 +31,12 @@ export function MyBookings() {
 
   const openEdit = (booking: Booking) => {
     setEditing(booking);
+    const reminderEnabled = booking.reminder_minutes && booking.reminder_minutes > 0;
     form.setFieldsValue({
       title: booking.title,
       attendees: booking.attendees.join('\n'),
+      reminder_enabled: reminderEnabled,
+      reminder_minutes: (booking.reminder_minutes ?? 5) as ReminderMinutes,
     });
   };
 
@@ -52,6 +56,28 @@ export function MyBookings() {
       title: '时间',
       key: 'time',
       render: (_: unknown, record: Booking) => formatTimeRange(record.start_time, record.end_time),
+    },
+    {
+      title: '提醒',
+      key: 'reminder',
+      width: 110,
+      render: (_: unknown, record: Booking) => {
+        if (!record.reminder_minutes || record.reminder_minutes === 0) {
+          return <Tag color="default">不提醒</Tag>;
+        }
+        if (record.reminder_triggered) {
+          return (
+            <Tag color="success" icon={<CheckCircleOutlined />}>
+              已提醒
+            </Tag>
+          );
+        }
+        return (
+          <Tag color="blue" icon={<BellOutlined />}>
+            提前{record.reminder_minutes}分钟
+          </Tag>
+        );
+      },
     },
     {
       title: '状态',
@@ -130,6 +156,8 @@ export function MyBookings() {
             await edit(editing.id, {
               title: values.title,
               attendees: normalizeAttendees(values.attendees),
+              reminder_minutes: values.reminder_enabled ? values.reminder_minutes : 0,
+              reminder_triggered: false,
             });
             setEditing(undefined);
           }}
@@ -139,6 +167,18 @@ export function MyBookings() {
           </Form.Item>
           <Form.Item name="attendees" label="参会人" rules={[{ required: true }]}>
             <Input.TextArea rows={4} />
+          </Form.Item>
+          <Form.Item name="reminder_enabled" label="会前提醒" valuePropName="checked">
+            <Checkbox>开启会前提醒</Checkbox>
+          </Form.Item>
+          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.reminder_enabled !== curr.reminder_enabled}>
+            {({ getFieldValue }) =>
+              getFieldValue('reminder_enabled') ? (
+                <Form.Item name="reminder_minutes" label="提醒时间" className="mb-0 ml-6">
+                  <Select options={REMINDER_OPTIONS} style={{ width: 140 }} />
+                </Form.Item>
+              ) : null
+            }
           </Form.Item>
         </Form>
       </Modal>

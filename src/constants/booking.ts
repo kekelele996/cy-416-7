@@ -30,3 +30,16 @@ export const BOOKING_MUTABLE_STATUSES = [
   BookingStatus.UPCOMING,
   BookingStatus.ONGOING,
 ];
+
+export type ReminderMinutes = 0 | 5 | 15;
+
+export const REMINDER_OPTIONS: { value: ReminderMinutes; label: string }[] = [
+  { value: 5, label: '提前 5 分钟' },
+  { value: 15, label: '提前 15 分钟' },
+];
+
+export const REMINDER_LABELS: Record<ReminderMinutes, string> = {
+  0: '不提醒',
+  5: '提前5分钟',
+  15: '提前15分钟',
+};

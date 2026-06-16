@@ -31,6 +31,7 @@ interface BookingState {
   checkIn: (bookingId: string) => Promise<void>;
   edit: (bookingId: string, patch: Partial<Booking>) => Promise<void>;
   findConflicts: (draft: BookingDraft) => Booking[];
+  triggerReminder: (bookingId: string) => Promise<void>;
 }
 
 export const useBookingStore = create<BookingState>((set, get) => ({
@@ -97,6 +98,14 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     const bookings = await updateBooking(bookingId, patch);
     set({ bookings });
     roomflowMessage.success('会议已更新');
+  },
+  async triggerReminder(bookingId) {
+    const target = get().bookings.find((booking) => booking.id === bookingId);
+    if (!target || target.reminder_triggered) {
+      return;
+    }
+    const bookings = await updateBooking(bookingId, { reminder_triggered: true });
+    set({ bookings });
   },
   findConflicts(draft) {
     return findRoomConflicts(get().bookings, draft.room_id, {

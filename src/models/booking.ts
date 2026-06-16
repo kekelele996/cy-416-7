@@ -1,4 +1,4 @@
-import { BookingStatus } from '@/constants/booking';
+import { BookingStatus, ReminderMinutes } from '@/constants/booking';
 
 export interface Booking {
   id: string;
@@ -11,8 +11,10 @@ export interface Booking {
   status: BookingStatus;
   created_at: string;
   checked_in?: boolean;
+  reminder_minutes?: ReminderMinutes;
+  reminder_triggered?: boolean;
 }
 
-export type BookingDraft = Omit<Booking, 'id' | 'status' | 'created_at' | 'checked_in'> & {
+export type BookingDraft = Omit<Booking, 'id' | 'status' | 'created_at' | 'checked_in' | 'reminder_triggered'> & {
   id?: string;
 };

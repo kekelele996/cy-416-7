@@ -23,6 +23,7 @@ import { useEffect, useMemo } from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
 import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary';
 import { MessageBinder } from '@/components/common/MessageBinder';
+import { ReminderNotifier } from '@/components/common/ReminderNotifier';
 import { THEME_LABELS } from '@/constants/themes';
 import { useAuth } from '@/hooks/useAuth';
 import { GuardedRoute, RootRedirect, appRoutes } from '@/router';
@@ -87,6 +88,7 @@ function AppShell() {
     >
       <AntApp>
         <MessageBinder />
+        <ReminderNotifier />
         <GlobalErrorBoundary>
           <Layout className="app-layout" style={{ background: tokens.background }}>
             <Sider breakpoint="lg" collapsedWidth="0" className="app-sider" width={238}>
